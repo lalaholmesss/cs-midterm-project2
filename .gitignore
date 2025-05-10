@@ -1,0 +1,14 @@
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vspscc
+*.vssscc
+.vs/
+Generated_Code/
+packages/
+*.nupkg
+project.lock.json
+*.log

@@ -1,0 +1,143 @@
+﻿@model RestaurantApplication.Models.Order
+@{
+    ViewData["Title"] = "Create Order";
+    var menuItems = ViewData["MenuItems"] as List<RestaurantApplication.Models.MenuItem>;
+}
+
+<h2>Create Your Order</h2>
+
+<form asp-action="SubmitOrder" method="post" onsubmit="return prepareOrderData();">
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="Name" name="Name" required>
+    </div>
+    <div class="mb-3">
+        <label for="Surname" class="form-label">Surname</label>
+        <input type="text" class="form-control" id="Surname" name="Surname" required>
+    </div>
+    <div class="mb-3">
+        <label for="PhoneNumber" class="form-label">Phone Number</label>
+        <input type="text" class="form-control" id="PhoneNumber" name="PhoneNumber" required>
+    </div>
+
+    <h4>Select Items</h4>
+    <div class="row mb-3">
+        <div class="col-md-5">
+            <label for="MenuItemDropdown" class="form-label">Menu Item</label>
+            <select class="form-control" id="MenuItemDropdown">
+                <option value="0">-- Select an item --</option>
+                @foreach (var item in menuItems)
+                {
+                    <option value="@item.Id" data-price="@item.Price">@item.Name - $@item.Price</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="QuantityInput" class="form-label">Quantity</label>
+            <input type="number" class="form-control" id="QuantityInput" value="1" min="1" />
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="button" class="btn btn-primary w-100" onclick="addToCart()">Add to Cart</button>
+        </div>
+    </div>
+
+    <h4>Your Cart</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <tbody id="cartItems">
+        </tbody>
+    </table>
+
+    <div class="mb-3">
+        <h5>Total Price: $<span id="totalPrice">0.00</span></h5>
+    </div>
+
+    <input type="hidden" id="OrderItemsJson" name="OrderItemsJson" />
+
+    <button type="submit" class="btn btn-success">Submit Order</button>
+
+    @if (ViewData["OrderSuccess"] != null && (bool)ViewData["OrderSuccess"])
+    {
+        <div class="alert alert-success mt-3">
+            <strong>Success!</strong> Your order has been recorded.
+        </div>
+    }
+</form>
+
+@section Scripts {
+    <script>
+        let cart = [];
+        let totalPrice = 0;
+
+        function addToCart() {
+            const dropdown = document.getElementById("MenuItemDropdown");
+            const quantityInput = document.getElementById("QuantityInput");
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+            const itemId = parseInt(selectedOption.value);
+            const itemName = selectedOption.text.split(" - $")[0];
+            const itemPrice = parseFloat(selectedOption.getAttribute("data-price"));
+            const quantity = parseInt(quantityInput.value);
+
+            if (itemId === 0 || isNaN(quantity) || quantity < 1) {
+                alert("Please select a valid item and quantity.");
+                return;
+            }
+
+            const existingItem = cart.find(item => item.MenuItemId === itemId);
+            if (existingItem) {
+                existingItem.Quantity += quantity;
+            } else {
+                cart.push({
+                    MenuItemId: itemId,
+                    Name: itemName,
+                    Price: itemPrice,
+                    Quantity: quantity
+                });
+            }
+
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById("cartItems");
+            cartItems.innerHTML = "";
+            totalPrice = 0;
+
+            cart.forEach(item => {
+                const itemTotal = item.Price * item.Quantity;
+                totalPrice += itemTotal;
+
+                cartItems.innerHTML += `
+                    <tr>
+                        <td>${item.Name}</td>
+                        <td>$${item.Price.toFixed(2)}</td>
+                        <td>${item.Quantity}</td>
+                        <td>$${itemTotal.toFixed(2)}</td>
+                        <td><button type="button" class="btn btn-danger btn-sm" onclick="removeFromCart(${item.MenuItemId})">Remove</button></td>
+                    </tr>`;
+            });
+
+            document.getElementById("totalPrice").innerText = totalPrice.toFixed(2);
+        }
+
+        function removeFromCart(menuItemId) {
+            cart = cart.filter(item => item.MenuItemId !== menuItemId);
+            updateCart();
+        }
+
+        function prepareOrderData() {
+            document.getElementById("OrderItemsJson").value = JSON.stringify(cart);
+            return true; 
+        }
+    </script>
+}

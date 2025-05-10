@@ -1,0 +1,58 @@
+﻿@model List<RestaurantApplication.Models.MenuItem>
+@using RestaurantApplication.Models
+@{
+    ViewData["Title"] = "Menu";
+}
+
+<h2 class="text-center">Our Menu</h2>
+
+
+<div class="mb-4">
+    @foreach (MenuCategory category in Enum.GetValues(typeof(MenuCategory)))
+    {
+        <a href="#@category" class="btn btn-outline-dark me-2">@category</a>
+    }
+</div>
+
+@if (Model != null && Model.Any())
+{
+    @foreach (MenuCategory category in Enum.GetValues(typeof(MenuCategory)))
+    {
+        <h2 id="@category">@category</h2>
+        <div class="row row-cols-1 row-cols-md-2 g-4 mb-5">
+            @foreach (var item in Model.Where(m => m.Category == category))
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="row g-0">
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <h5 class="card-title">@item.Name</h5>
+                                    <p class="card-text">@item.Description</p>
+                                    <p class="card-text"><strong>$@item.Price</strong></p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <img src="~/images/@item.ImageUrl" class="img-fluid rounded-end" alt="@item.Name" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    <p>No menu items available.</p>
+}
+
+<script>
+    function scrollToCategory(categoryId) {
+        const element = document.getElementById(categoryId);
+        window.scrollTo({
+            top: element.offsetTop,
+            behavior: 'smooth'
+        });
+    }
+</script>
